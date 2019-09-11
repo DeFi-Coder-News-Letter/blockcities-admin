@@ -18,33 +18,59 @@
                     <hr/>
                     <h3 class="text-danger">{{ parseFloat(totalEth) }} ETH</h3>
                 </div>
-                <!--<div class="d-none d-sm-block col">-->
-                    <!--<a class="btn btn-primary btn-lg" href="#" role="button" @click="mintBuilding()">Mint building</a>-->
-                    <!--<hr/>-->
-                    <!--<div class="alert alert-danger">-->
-                        <!--<h6>Mint a new Special</h6>-->
-
-                        <!--<div class="row">-->
-                            <!--<div class="col">-->
-                                <!--<select class="custom-select mb-2" v-model="form.selectedSpecial">-->
-                                    <!--<option v-for="(value, key) in form.specials" :value="{data:value, id:key}">-->
-                                        <!--{{ key }}: {{ value.name }} : {{ value.city }} : {{ value.background_color }}-->
-                                    <!--</option>-->
-                                <!--</select>-->
-                                <!--<input type="text" class="form-control mb-2 mr-sm-2" placeholder="0x123..." v-model="form.recipient">-->
-                                <!--<button class="btn btn-danger" @click="createSpecial">Mint Special</button>-->
-                            <!--</div>-->
-                        <!--</div>-->
-                    <!--</div>-->
-                <!--</div>-->
             </div>
         </b-jumbotron>
+        <div class="card-columns" v-if="buildings">
+            <div class="card m-2 p-2" v-for="b in buildings" :style="bg(b.data.background_color)">
+                <div class="card-body">
+                    <p class="text-center mx-auto"><img class="card-img-top" :src="b.data.image" :alt="b.data.name"
+                                                        style="width: 150px"></p>
+                    <h3 class="card-title text-center">{{ b.data.name }}</h3>
+                    <p class="text-center">{{ b.data.description }}</p>
+                    <p class="small">
+                        <span class="text-muted">Token ID</span> <code>{{ b.data.attributes.tokenId }}</code><br/>
+                        <span class="text-muted">Window Type</span> <code>{{ b.data.attributes.windowType }}</code><br/>
+                        <span class="text-muted">City</span> <code>{{ b.data.attributes.city }}</code><br/>
+                        <span class="text-muted">Building</span> <code>{{ b.data.attributes.building }}</code><br/>
+                        <span class="text-muted">Ground Floor Type</span> <code>{{ b.data.attributes.groundFloorType
+                        }}</code><br/>
+                        <span class="text-muted">Ground Floor Use</span> <code>{{ b.data.attributes.groundFloorUse
+                        }}</code><br/>
+                        <span class="text-muted">Code Type</span> <code>{{ b.data.attributes.coreType }}</code><br/>
+                        <span class="text-muted">Core Use</span> <code>{{ b.data.attributes.coreUse }}</code><br/>
+                        <span class="text-muted">Roof Type</span> <code>{{ b.data.attributes.rooftopType }}</code><br/>
+                        <span class="text-muted">Roof Use</span> <code>{{ b.data.attributes.rooftopUse }}</code><br/>
+                        <span class="text-muted">Height</span> <code>{{ b.data.attributes.height }} ft</code><br/>
+                        <span class="text-muted">Height Class</span> <code>{{ b.data.attributes.heightClass
+                        }}</code><br/>
+                        <span class="text-muted">Exterior Colorway</span> <code>{{ b.data.attributes.exteriorColorway
+                        }}</code><br/>
+                        <span class="text-muted">Base Window Colorway</span> <code>{{
+                        b.data.attributes.baseWindowColorway }}</code><br/>
+                        <span class="text-muted">Body Window Colorway</span> <code>{{
+                        b.data.attributes.bodyWindowColorway }}</code><br/>
+                        <span class="text-muted">Roof Window Colorway</span> <code>{{
+                        b.data.attributes.roofWindowColorway }}</code><br/>
+                        <span class="text-muted">Background Colorway</span> <code>{{
+                        b.data.attributes.backgroundColorway }}</code>
+                    </p>
+                    <p class="small"><span class="text-muted">Architect</span> <code>{{ b.data.attributes.architect
+                        }}</code></p>
+                </div>
+            </div>
+        </div>
+        <div v-else>
+            Loading...
+        </div>
     </div>
 </template>
 
 <script>
-    import { ethers } from 'ethers';
+    import { ethers, utils } from 'ethers';
     import { contracts } from 'blockcities-contract-artifacts';
+    import axios from 'axios';
+
+    import store from '../store';
 
     export default {
         name: 'home',
@@ -71,61 +97,59 @@
             };
         },
         created: async function () {
-
             try {
-            await window.ethereum.enable();
-            const provider = new ethers.providers.Web3Provider(web3.currentProvider);
-            const signer = provider.getSigner();
+                await window.ethereum.enable();
+                const provider = new ethers.providers.Web3Provider(web3.currentProvider);
+                const signer = provider.getSigner();
 
-            this.blocknumber = await provider.getBlockNumber();
-            const {chainId} = await provider.getNetwork();
-            // const rootApi = await this.getRootApi();
+                this.blocknumber = await provider.getBlockNumber();
+                const {chainId} = await provider.getNetwork();
+                const rootApi = store.getters.rootApi;
 
-            this.chainId = chainId;
+                this.chainId = chainId;
 
-            // let specialsResponse = await axios.get(`${rootApi}/configs/buildings/specials`, {headers: {'Access-Control-Allow-Origin': '*'}});
-            //   this.form.specials = specialsResponse.data;
-            //
+                this.vendingContract = new ethers.Contract(
+                    contracts.addresses.BlockCitiesVendingMachine(this.chainId).address,
+                    contracts.addresses.BlockCitiesVendingMachine(this.chainId).abi,
+                    signer
+                );
 
-            console.log(signer);
+                this.pricePerBuildingInWei = await this.vendingContract.totalPrice(1);
+                this.pricePerBuildingInEth = ethers.utils.formatEther(this.pricePerBuildingInWei);
 
-            this.vendingContract = new ethers.Contract(
-                contracts.addresses.BlockCitiesVendingMachine(this.chainId).address,
-                contracts.addresses.BlockCitiesVendingMachine(this.chainId).abi,
-                signer
-            );
 
-            this.pricePerBuildingInWei = await this.vendingContract.totalPrice(1);
-            this.pricePerBuildingInEth = ethers.utils.formatEther(this.pricePerBuildingInWei);
+                this.blockcitiesContract = new ethers.Contract(
+                    contracts.addresses.BlockCities(this.chainId).address,
+                    contracts.addresses.BlockCities(this.chainId).abi,
+                    signer
+                );
 
-            //
-            //   const blockcitiesAddress = await this.getBlockCitiesAddress();
-            //
-            //   this.blockcitiesContract = new ethers.Contract(
-            //           blockcitiesAddress,
-            //           this.blockcitiesAbi,
-            //           signer
-            //   );
-            //
 
-              // this.pricePerBuildingInEth = ethers.utils.formatEther(this.pricePerBuildingInWei);
-            //   this.lastPricePerBuildingInEth = ethers.utils.formatEther((await this.vendingContractV2.lastSalePrice()));
-            //   this.lastSaleBlock = await this.vendingContractV2.lastSaleBlock();
-            //
-            //   this.totalEth = ethers.utils.formatEther((await this.vendingContract.totalPurchasesInWei()));
-            //   this.totalEthV2 = ethers.utils.formatEther((await this.vendingContractV2.totalPurchasesInWei()));
-            //
-            //   this.totalBuildings = (await this.blockcitiesContract.totalBuildings()).toNumber();
-            //
-            //
-            //   for (let i =  this.totalBuildings - 50; i <= this.totalBuildings; i++) {
-            //     const b = await axios.get(`${rootApi}/network/${this.chainId}/token/${i}`);
-            //     this.buildings.push(b);
-            //   }
+                this.pricePerBuildingInEth = ethers.utils.formatEther(this.pricePerBuildingInWei);
+                this.lastPricePerBuildingInEth = ethers.utils.formatEther((await this.vendingContract.lastSalePrice()));
+                this.lastSaleBlock = await this.vendingContract.lastSaleBlock();
+
+                const v1VendingMachineTotalSalesInWei = utils.bigNumberify("25510500000000000000");
+                const v2VendingMachineTotalSalesInWei = await this.vendingContract.totalPurchasesInWei();
+                this.totalEth = ethers.utils.formatEther(v1VendingMachineTotalSalesInWei.add(v2VendingMachineTotalSalesInWei));
+
+                this.totalBuildings = (await this.blockcitiesContract.totalBuildings()).toNumber();
+
+                for (let i = this.totalBuildings - 50; i <= this.totalBuildings; i++) {
+                    const b = await axios.get(`${rootApi}/network/${this.chainId}/token/${i}`);
+                    this.buildings.push(b);
+                }
             } catch (e) {
                 console.error(e);
             }
 
+        },
+        methods: {
+            bg: (hex) => {
+                return {
+                    'background-color': `#${hex}`
+                };
+            },
         }
     };
 </script>
