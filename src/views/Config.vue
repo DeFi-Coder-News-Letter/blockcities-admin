@@ -16,8 +16,31 @@
         <div class="row mt-4" v-if="blockcitiesContract && vendingContract">
             <div class="col">
                 <h3>Colour Generator</h3>
-                Exteriors: <span class="badge badge-info">{{ colourGeneratorData.exteriorPercentageArray }}</span><br/>
-                Backgrounds: <span class="badge badge-info">{{ colourGeneratorData.backgroundsPercentagesArray }}</span>
+                Platform: <code>{{ colourGeneratorData.platform }}</code><br/>
+                Partner: <code>{{ colourGeneratorData.partner }}</code><br/>
+                <hr/>
+                <div class="mb-2 text-right">Exterior %: <code>{{ colourGeneratorData.exteriorPercentageArray }}</code></div>
+                <div>
+                    <b-form>
+                        <b-input-group prepend="Exterior %" class="mb-2">
+                            <b-input type="text" placeholder="comma separated list, for example:1,2,3" v-model="form.exteriorPercentageArrayInput"></b-input>
+                        </b-input-group>
+
+                        <b-button variant="primary" v-on:click="updateExteriorPercentageArray">Update Exterior %</b-button>
+                    </b-form>
+                </div>
+                <hr/>
+                <div class="mb-2 text-right">Backgrounds %: <code>{{ colourGeneratorData.backgroundsPercentagesArray }}</code></div>
+                <div>
+                    <b-form>
+                        <b-input-group prepend="Backgrounds %" class="mb-2">
+                            <b-input type="text" placeholder="comma separated list, for example:1,2,3" v-model="form.backgroundsPercentagesArrayInput"></b-input>
+                        </b-input-group>
+
+                        <b-button variant="primary" v-on:click="updateBackgroundsPercentagesArray">Update Backgrounds %</b-button>
+                    </b-form>
+                </div>
+                <hr/>
             </div>
             <div class="col">
                 <h3>Logic Generator</h3>
@@ -45,6 +68,8 @@
                 colourGeneratorContractAddress: null,
                 colourGeneratorContract: null,
                 colourGeneratorData: {
+                    platform: null,
+                    partner: null,
                     exteriorPercentageArray: null,
                     backgroundsPercentagesArray: null,
                 },
@@ -57,6 +82,11 @@
                     buildingBaseMappings: null,
                     buildingBodyMappings: null,
                     buildingRoofMappings: null,
+                },
+
+                form: {
+                    exteriorPercentageArrayInput: null,
+                    backgroundsPercentagesArrayInput: null,
                 },
 
                 chainId: null,
@@ -87,7 +117,6 @@
                 this.colourGeneratorContractAddress = await this.vendingContract.colourGenerator();
                 this.logicGeneratorContractAddress = await this.vendingContract.logicGenerator();
 
-
                 // FIXME use this once deployed correctly
                 // this.colourGeneratorContract = new ethers.Contract(
                 //     this.colourGeneratorContractAddress,
@@ -101,11 +130,10 @@
                     signer
                 );
 
-                this.exteriorPercentageArray = await this.colourGeneratorContract.exteriorPercentageArray();
-                this.backgroundsPercentagesArray = await this.colourGeneratorContract.backgroundsPercentagesArray();
-
-                console.log(`EP`, this.exteriorPercentageArray);
-                console.log(`BG`, this.backgroundsPercentagesArray);
+                this.colourGeneratorData.platform = await this.colourGeneratorContract.platform();
+                this.colourGeneratorData.partner = await this.colourGeneratorContract.partner();
+                this.colourGeneratorData.exteriorPercentageArray = (await this.colourGeneratorContract.exteriorPercentageArray()).map((bn) => bn.toNumber());
+                this.colourGeneratorData.backgroundsPercentagesArray = (await this.colourGeneratorContract.backgroundsPercentagesArray()).map((bn) => bn.toNumber());
 
                 this.logicGeneratorContract = new ethers.Contract(
                     this.logicGeneratorContractAddress,
@@ -133,6 +161,49 @@
                 console.error(e);
             }
         },
-        methods: {}
+        methods: {
+            async updateExteriorPercentageArray() {
+                try {
+                    if (this.form.exteriorPercentageArrayInput) {
+
+                        const convertedExteriorPercentageArray = this.form.exteriorPercentageArrayInput.split(',').map((str) => str.trim());
+                        const tx = await this.colourGeneratorContract.updateExteriorPercentages(convertedExteriorPercentageArray);
+                        console.log('TX', tx);
+
+                        const receipt = await tx.wait(1);
+                        console.log('RECEIPT', receipt);
+
+                        this.colourGeneratorData.exteriorPercentageArray = (await this.colourGeneratorContract.exteriorPercentageArray()).map((bn) => bn.toNumber());
+                        this.form.exteriorPercentageArrayInput = null;
+                    } else {
+                        alert('Fill in Exterior Percentage Array Input!');
+                    }
+                } catch (e) {
+                    console.error(e);
+                    alert('Something went bang!\n' +  e);
+                }
+            },
+            async updateBackgroundsPercentagesArray() {
+                try {
+                    if (this.form.backgroundsPercentagesArrayInput) {
+
+                        const convertedBackgroundsPercentageArray = this.form.backgroundsPercentagesArrayInput.split(',').map((str) => str.trim());
+                        const tx = await this.colourGeneratorContract.updateBackgroundsPercentages(convertedBackgroundsPercentageArray);
+                        console.log('TX', tx);
+
+                        const receipt = await tx.wait(1);
+                        console.log('RECEIPT', receipt);
+
+                        this.colourGeneratorData.backgroundsPercentagesArray = (await this.colourGeneratorContract.backgroundsPercentagesArray()).map((bn) => bn.toNumber());
+                        this.form.backgroundsPercentagesArrayInput = null;
+                    } else {
+                        alert('Fill in Exterior Percentage Array Input!');
+                    }
+                } catch (e) {
+                    console.error(e);
+                    alert('Something went bang!\n' +  e);
+                }
+            }
+        }
     };
 </script>
