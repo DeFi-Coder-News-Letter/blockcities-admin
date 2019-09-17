@@ -16,12 +16,16 @@
         <div class="row mt-4" v-if="blockcitiesContract && vendingContract">
             <div class="col">
                 <h3>Colour Generator</h3>
-                Exteriors: <span class="badge badge-info">{{ exteriors }}</span><br/>
-                Backgrounds: <span class="badge badge-info">{{ backgrounds }}</span>
+                Exteriors: <span class="badge badge-info">{{ colourGeneratorData.exteriorPercentageArray }}</span><br/>
+                Backgrounds: <span class="badge badge-info">{{ colourGeneratorData.backgroundsPercentagesArray }}</span>
             </div>
             <div class="col">
                 <h3>Logic Generator</h3>
-
+                City %: {{ logicGeneratorData.cityPercentages }}<br/>
+                City Mappings: {{ logicGeneratorData.cityMappings }}<br/>
+                Base Mappings: {{ logicGeneratorData.buildingBaseMappings }}<br/>
+                Body Mappings: {{ logicGeneratorData.buildingBodyMappings }}<br/>
+                Roof Mappings: {{ logicGeneratorData.buildingRoofMappings }}<br/>
             </div>
         </div>
     </div>
@@ -40,11 +44,20 @@
 
                 colourGeneratorContractAddress: null,
                 colourGeneratorContract: null,
-                exteriors: null,
-                backgrounds: null,
+                colourGeneratorData: {
+                    exteriorPercentageArray: null,
+                    backgroundsPercentagesArray: null,
+                },
 
                 logicGeneratorContractAddress: null,
                 logicGeneratorContract: null,
+                logicGeneratorData: {
+                    cityPercentages: null,
+                    cityMappings: null,
+                    buildingBaseMappings: null,
+                    buildingBodyMappings: null,
+                    buildingRoofMappings: null,
+                },
 
                 chainId: null,
             };
@@ -74,14 +87,47 @@
                 this.colourGeneratorContractAddress = await this.vendingContract.colourGenerator();
                 this.logicGeneratorContractAddress = await this.vendingContract.logicGenerator();
 
+
+                // FIXME use this once deployed correctly
+                // this.colourGeneratorContract = new ethers.Contract(
+                //     this.colourGeneratorContractAddress,
+                //     contracts.addresses.ColourGenerator(this.chainId).abi,
+                //     signer
+                // );
+
                 this.colourGeneratorContract = new ethers.Contract(
-                    this.colourGeneratorContractAddress,
+                    contracts.addresses.ColourGenerator(this.chainId).address,
                     contracts.addresses.ColourGenerator(this.chainId).abi,
                     signer
                 );
 
-                this.exteriors = await this.colourGeneratorContract.exteriors();
-                this.backgrounds = await this.colourGeneratorContract.backgrounds();
+                this.exteriorPercentageArray = await this.colourGeneratorContract.exteriorPercentageArray();
+                this.backgroundsPercentagesArray = await this.colourGeneratorContract.backgroundsPercentagesArray();
+
+                console.log(`EP`, this.exteriorPercentageArray);
+                console.log(`BG`, this.backgroundsPercentagesArray);
+
+                this.logicGeneratorContract = new ethers.Contract(
+                    this.logicGeneratorContractAddress,
+                    contracts.addresses.LogicGenerator(this.chainId).abi,
+                    signer
+                );
+
+                // uint256[] public cityPercentages;
+                //
+                // mapping(uint256 => uint256[]) public cityMappings;
+                //
+                // mapping(uint256 => uint256[]) public buildingBaseMappings;
+                // mapping(uint256 => uint256[]) public buildingBodyMappings;
+                // mapping(uint256 => uint256[]) public buildingRoofMappings;
+                //
+                // uint256[] public specialMappings;
+
+                // this.logicGeneratorData.cityPercentages = await this.logicGeneratorContract.cityPercentages(0);
+                // this.logicGeneratorData.cityMappings = await this.logicGeneratorContract.cityMappings(0, 0);
+                // this.logicGeneratorData.buildingBaseMappings = await this.logicGeneratorContract.buildingBaseMappings(0, 0);
+                // this.logicGeneratorData.buildingBodyMappings = await this.logicGeneratorContract.buildingBodyMappings(0, 0);
+                // this.logicGeneratorData.buildingRoofMappings = await this.logicGeneratorContract.buildingRoofMappings(0, 0);
 
             } catch (e) {
                 console.error(e);

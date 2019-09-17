@@ -14,6 +14,11 @@ export default new Router({
             component: Home
         },
         {
+            path: '/specials',
+            name: 'specials',
+            component: () => import(/* webpackChunkName: "specials" */ './views/Specials.vue')
+        },
+        {
             path: '/config',
             name: 'config',
             component: () => import(/* webpackChunkName: "config" */ './views/Config.vue')

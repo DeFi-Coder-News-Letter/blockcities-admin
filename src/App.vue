@@ -10,6 +10,7 @@
                 <!-- Right aligned nav items -->
                 <b-navbar-nav class="ml-auto">
 
+                    <b-nav-item :to="{name:'specials'}">Specials</b-nav-item>
                     <b-nav-item :to="{name:'config'}">Config</b-nav-item>
                 </b-navbar-nav>
             </b-collapse>
