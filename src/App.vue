@@ -22,4 +22,8 @@
 
 <style lang="scss">
     @import '../node_modules/bootstrap/scss/bootstrap';
+
+    h1 {
+        margin-bottom: 2rem;
+    }
 </style>

@@ -100,7 +100,7 @@
 
                 this.blocknumber = await provider.getBlockNumber();
                 const {chainId} = await provider.getNetwork();
-                const rootApi = store.getters.rootApi;
+                const rootApi = store.getters.rootApi; // FIXME access via $store @vincent
 
                 this.chainId = chainId;
 
@@ -147,7 +147,7 @@
     };
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
     .badge {
         font-size: 2rem;
     }
