@@ -3,6 +3,8 @@
         <b-navbar toggleable="lg" type="dark" variant="danger">
             <b-navbar-brand to="/">BlockCities Admin</b-navbar-brand>
 
+            <network-badge :chain="chain" v-if="chain"></network-badge>
+
             <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
 
             <b-collapse id="nav-collapse" is-nav>
@@ -20,6 +22,33 @@
         </div>
     </div>
 </template>
+
+<script>
+    import { ethers } from 'ethers';
+    import NetworkBadge from './components/NetworkBadge';
+    import store from './store';
+    import { mapGetters } from 'vuex';
+
+    export default {
+        components: {NetworkBadge},
+        computed: {
+            ...mapGetters([
+                'chain',
+            ]),
+        },
+        created: async function () {
+            try {
+                await window.ethereum.enable();
+                const provider = new ethers.providers.Web3Provider(web3.currentProvider);
+                const signer = provider.getSigner();
+
+                store.dispatch('provider', provider);
+            } catch (e) {
+                console.error(e);
+            }
+        },
+    };
+</script>
 
 <style lang="scss">
     @import '../node_modules/bootstrap/scss/bootstrap';

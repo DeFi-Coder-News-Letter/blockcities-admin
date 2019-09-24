@@ -11,10 +11,6 @@
                     <h1 class="text-danger mt-4">{{ parseFloat(totalEth) }} ETH</h1>
                 </div>
                 <div class="col text-right">
-                    <div>
-                        <span class="badge badge-warning" v-if="chainId === 3">ROPSTEN</span>
-                        <span class="badge badge-success" v-if="chainId === 1">MAINNET</span>
-                    </div>
                     <div class="mt-4">
                         <small>
                             Last Sale Block: <code>{{ lastSaleBlock }}</code><br/>
@@ -67,9 +63,11 @@
     import axios from 'axios';
 
     import store from '../store';
+    import NetworkBadge from '../components/NetworkBadge';
 
     export default {
         name: 'home',
+        components: {NetworkBadge},
         data() {
             return {
                 blockcitiesContract: null,
@@ -100,7 +98,7 @@
 
                 this.blocknumber = await provider.getBlockNumber();
                 const {chainId} = await provider.getNetwork();
-                const rootApi = store.getters.rootApi; // FIXME access via $store @vincent
+                const rootApi = store.getters.rootApi;
 
                 this.chainId = chainId;
 
@@ -147,8 +145,4 @@
     };
 </script>
 
-<style lang="scss" scoped>
-    .badge {
-        font-size: 2rem;
-    }
-</style>
+
