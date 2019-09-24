@@ -7,16 +7,24 @@
                     <small>
                         Price per building: {{ pricePerBuildingInEth }} ETH<br/>
                         Last price per building: {{ lastPricePerBuildingInEth }} ETH<br/>
+                        Last Sale Block: <code>{{ lastSaleBlock }}</code><br/>
+                        Blocks since last sale: <code>{{ blocknumber - lastSaleBlock }}</code><br/>
+                        <span class="text-muted small">roughly {{ ((blocknumber - lastSaleBlock) * 15) / 60 }} mins</span><br/>
                     </small>
+                    <hr/>
                     <h1 class="text-danger mt-4">{{ parseFloat(totalEth) }} ETH</h1>
                 </div>
                 <div class="col text-right">
-                    <div class="mt-4">
-                        <small>
-                            Last Sale Block: <code>{{ lastSaleBlock }}</code><br/>
-                            Blocks since last sale: <code>{{ blocknumber - lastSaleBlock }}</code><br/>
-                            <span class="text-muted small">roughly {{ ((blocknumber - lastSaleBlock) * 15) / 60 }} mins</span><br/>
-                        </small>
+                    <div class="alert alert-default">
+                        <h6>Mint a new building</h6>
+                        <a class="btn btn-primary" href="#" role="button" @click="mintBuilding()">Mint</a>
+                    </div>
+                    <div class="alert alert-warning" v-if="tx">
+                        TX: {{ tx.hash }}
+                    </div>
+
+                    <div class="alert alert-info" v-if="buildingTokenId">
+                        Building Token ID: {{ buildingTokenId }}
                     </div>
                 </div>
             </div>
@@ -78,6 +86,7 @@
                 buildingTokenId: null,
                 buildingMetaData: null,
                 buildings: [],
+                tx: null,
                 form: {
                     recipient: null,
                     selectedSpecial: null,
@@ -92,6 +101,7 @@
                 'blockcitiesContract',
                 'provider',
                 'chain',
+                'v1VendingMachineTotalSalesInWei',
             ]),
         },
         watch: {
@@ -109,9 +119,9 @@
                     this.lastPricePerBuildingInEth = ethers.utils.formatEther((await vendingContract.lastSalePrice()));
                     this.lastSaleBlock = await vendingContract.lastSaleBlock();
 
-                    const v1VendingMachineTotalSalesInWei = utils.bigNumberify('25510500000000000000'); // static val from contract
+                    const v1VendingMachineTotalSalesInWeiBn = utils.bigNumberify(this.v1VendingMachineTotalSalesInWei); // static val from contract
                     const v2VendingMachineTotalSalesInWei = await vendingContract.totalPurchasesInWei();
-                    this.totalEth = ethers.utils.formatEther(v1VendingMachineTotalSalesInWei.add(v2VendingMachineTotalSalesInWei));
+                    this.totalEth = ethers.utils.formatEther(v1VendingMachineTotalSalesInWeiBn.add(v2VendingMachineTotalSalesInWei));
                 }
             },
             async blockcitiesContract(blockcitiesContract) {
@@ -119,7 +129,8 @@
                     this.totalBuildings = (await blockcitiesContract.totalBuildings()).toNumber();
 
                     if (this.totalBuildings > 0) {
-                        for (let i = this.totalBuildings - 6; i <= this.totalBuildings; i++) {
+                        const last6 = (this.totalBuildings > 6) ? this.totalBuildings - 6 : this.totalBuildings;
+                        for (let i = last6; i <= this.totalBuildings; i++) {
                             const b = await axios.get(`${this.rootApi}/network/${this.chain.chainId}/token/${i}`);
                             this.buildings.push(b);
                         }
@@ -132,6 +143,23 @@
                 return {
                     'background-color': `#${hex}`
                 };
+            },
+            async mintBuilding() {
+
+                this.pricePerBuildingInWei = (await this.vendingContract.totalPrice(1));
+
+                let overrides = {
+                    // The amount to send with the transaction (i.e. msg.value)
+                    value: this.pricePerBuildingInWei,
+                };
+
+                // wait for tx to be mined
+                this.tx = await this.vendingContract.mintBuilding(overrides);
+
+                let receipt = await this.tx.wait(1);
+                const tokenIdBN = receipt.events.pop().args[0];
+                this.buildingTokenId = tokenIdBN.toNumber();
+                console.log(`Token ID:`, this.buildingTokenId);
             },
         }
     };

@@ -25,6 +25,7 @@ export default new Vuex.Store({
         provider: state => state.provider,
         signer: state => state.signer,
         chain: state => state.chain,
+        v1VendingMachineTotalSalesInWei: state => (state.chain && state.chain.chainId === 1) ? '25510500000000000000' : '',
         vendingContract: state => state.vendingContract,
         blockcitiesContract: state => state.blockcitiesContract,
     },
