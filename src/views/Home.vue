@@ -32,8 +32,9 @@
         <div class="card-columns" v-if="buildings">
             <div class="card m-2 p-2" v-for="b in buildings" :style="bg(b.data.background_color)">
                 <div class="card-body">
-                    <p class="text-center mx-auto"><img class="card-img-top" :src="b.data.image" :alt="b.data.name"
-                                                        style="width: 150px"></p>
+                    <p class="text-center mx-auto">
+                        <img class="card-img-top" :src="`${rootApi}/network/${chain.chainId}/token/${b.data.attributes.tokenId}/image`" :alt="b.data.name" style="width: 100px">
+                    </p>
                     <h3 class="card-title text-center">{{ b.data.name }}</h3>
                     <p class="text-center">{{ b.data.description }}</p>
                     <p class="small">
@@ -129,7 +130,7 @@
                     this.totalBuildings = (await blockcitiesContract.totalBuildings()).toNumber();
 
                     if (this.totalBuildings > 0) {
-                        const last6 = (this.totalBuildings > 6) ? this.totalBuildings - 6 : this.totalBuildings;
+                        const last6 = (this.totalBuildings > 6) ? this.totalBuildings - 6 : 1;
                         for (let i = last6; i <= this.totalBuildings; i++) {
                             const b = await axios.get(`${this.rootApi}/network/${this.chain.chainId}/token/${i}`);
                             this.buildings.push(b);
@@ -149,7 +150,8 @@
                 this.pricePerBuildingInWei = (await this.vendingContract.totalPrice(1));
 
                 let overrides = {
-                    // The amount to send with the transaction (i.e. msg.value)
+                    gasLimit: 6000000, // The maximum units of gas for the transaction to use
+                    gasPrice: 4000000000,  // The price (in wei) per unit of gas
                     value: this.pricePerBuildingInWei,
                 };
 

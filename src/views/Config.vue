@@ -42,14 +42,14 @@
                 </div>
                 <hr/>
             </div>
-            <div class="col">
-                <h3>Logic Generator</h3>
-                City %: {{ logicGeneratorData.cityPercentages }}<br/>
-                City Mappings: {{ logicGeneratorData.cityMappings }}<br/>
-                Base Mappings: {{ logicGeneratorData.buildingBaseMappings }}<br/>
-                Body Mappings: {{ logicGeneratorData.buildingBodyMappings }}<br/>
-                Roof Mappings: {{ logicGeneratorData.buildingRoofMappings }}<br/>
-            </div>
+            <!--<div class="col">-->
+                <!--<h3>Logic Generator</h3>-->
+                <!--City %: {{ logicGeneratorData.cityPercentages }}<br/>-->
+                <!--City Mappings: {{ logicGeneratorData.cityMappings }}<br/>-->
+                <!--Base Mappings: {{ logicGeneratorData.buildingBaseMappings }}<br/>-->
+                <!--Body Mappings: {{ logicGeneratorData.buildingBodyMappings }}<br/>-->
+                <!--Roof Mappings: {{ logicGeneratorData.buildingRoofMappings }}<br/>-->
+            <!--</div>-->
         </div>
     </div>
 </template>
@@ -117,15 +117,8 @@
                 this.colourGeneratorContractAddress = await this.vendingContract.colourGenerator();
                 this.logicGeneratorContractAddress = await this.vendingContract.logicGenerator();
 
-                // FIXME use this once deployed correctly
-                // this.colourGeneratorContract = new ethers.Contract(
-                //     this.colourGeneratorContractAddress,
-                //     contracts.addresses.ColourGenerator(this.chainId).abi,
-                //     signer
-                // );
-
                 this.colourGeneratorContract = new ethers.Contract(
-                    contracts.addresses.ColourGenerator(this.chainId).address,
+                    this.colourGeneratorContractAddress,
                     contracts.addresses.ColourGenerator(this.chainId).abi,
                     signer
                 );
@@ -135,11 +128,11 @@
                 this.colourGeneratorData.exteriorPercentageArray = (await this.colourGeneratorContract.exteriorPercentageArray()).map((bn) => bn.toNumber());
                 this.colourGeneratorData.backgroundsPercentagesArray = (await this.colourGeneratorContract.backgroundsPercentagesArray()).map((bn) => bn.toNumber());
 
-                this.logicGeneratorContract = new ethers.Contract(
-                    this.logicGeneratorContractAddress,
-                    contracts.addresses.LogicGenerator(this.chainId).abi,
-                    signer
-                );
+                // this.logicGeneratorContract = new ethers.Contract(
+                //     this.logicGeneratorContractAddress,
+                //     contracts.addresses.LogicGenerator(this.chainId).abi,
+                //     signer
+                // );
 
                 // uint256[] public cityPercentages;
                 //
