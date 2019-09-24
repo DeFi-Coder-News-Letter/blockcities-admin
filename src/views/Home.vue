@@ -59,19 +59,15 @@
 
 <script>
     import { ethers, utils } from 'ethers';
-    import { contracts } from 'blockcities-contract-artifacts';
     import axios from 'axios';
-
-    import store from '../store';
     import NetworkBadge from '../components/NetworkBadge';
+    import { mapGetters } from 'vuex';
 
     export default {
         name: 'home',
         components: {NetworkBadge},
         data() {
             return {
-                blockcitiesContract: null,
-                vendingContract: null,
                 pricePerBuildingInWei: null,
                 pricePerBuildingInEth: null,
                 lastPricePerBuildingInEth: null,
@@ -82,7 +78,6 @@
                 buildingTokenId: null,
                 buildingMetaData: null,
                 buildings: [],
-                chainId: null,
                 form: {
                     recipient: null,
                     selectedSpecial: null,
@@ -90,50 +85,45 @@
                 }
             };
         },
-        created: async function () {
-            try {
-                await window.ethereum.enable();
-                const provider = new ethers.providers.Web3Provider(web3.currentProvider);
-                const signer = provider.getSigner();
-
-                this.blocknumber = await provider.getBlockNumber();
-                const {chainId} = await provider.getNetwork();
-                const rootApi = store.getters.rootApi;
-
-                this.chainId = chainId;
-
-                this.vendingContract = new ethers.Contract(
-                    contracts.addresses.BlockCitiesVendingMachine(this.chainId).address,
-                    contracts.addresses.BlockCitiesVendingMachine(this.chainId).abi,
-                    signer
-                );
-
-                this.pricePerBuildingInWei = await this.vendingContract.totalPrice(1);
-                this.pricePerBuildingInEth = ethers.utils.formatEther(this.pricePerBuildingInWei);
-
-                this.blockcitiesContract = new ethers.Contract(
-                    contracts.addresses.BlockCities(this.chainId).address,
-                    contracts.addresses.BlockCities(this.chainId).abi,
-                    signer
-                );
-
-                this.pricePerBuildingInEth = ethers.utils.formatEther(this.pricePerBuildingInWei);
-                this.lastPricePerBuildingInEth = ethers.utils.formatEther((await this.vendingContract.lastSalePrice()));
-                this.lastSaleBlock = await this.vendingContract.lastSaleBlock();
-
-                const v1VendingMachineTotalSalesInWei = utils.bigNumberify('25510500000000000000');
-                const v2VendingMachineTotalSalesInWei = await this.vendingContract.totalPurchasesInWei();
-                this.totalEth = ethers.utils.formatEther(v1VendingMachineTotalSalesInWei.add(v2VendingMachineTotalSalesInWei));
-
-                this.totalBuildings = (await this.blockcitiesContract.totalBuildings()).toNumber();
-
-                for (let i = this.totalBuildings - 12; i <= this.totalBuildings; i++) {
-                    const b = await axios.get(`${rootApi}/network/${this.chainId}/token/${i}`);
-                    this.buildings.push(b);
+        computed: {
+            ...mapGetters([
+                'rootApi',
+                'vendingContract',
+                'blockcitiesContract',
+                'provider',
+                'chain',
+            ]),
+        },
+        watch: {
+            async provider(provider) {
+                if (provider) {
+                    this.blocknumber = await provider.getBlockNumber();
                 }
-            } catch (e) {
-                console.error(e);
-            }
+            },
+            async vendingContract(vendingContract) {
+                if (vendingContract) {
+                    this.pricePerBuildingInWei = await vendingContract.totalPrice(1);
+                    this.pricePerBuildingInEth = ethers.utils.formatEther(this.pricePerBuildingInWei);
+
+                    this.pricePerBuildingInEth = ethers.utils.formatEther(this.pricePerBuildingInWei);
+                    this.lastPricePerBuildingInEth = ethers.utils.formatEther((await vendingContract.lastSalePrice()));
+                    this.lastSaleBlock = await vendingContract.lastSaleBlock();
+
+                    const v1VendingMachineTotalSalesInWei = utils.bigNumberify('25510500000000000000'); // static val from contract
+                    const v2VendingMachineTotalSalesInWei = await vendingContract.totalPurchasesInWei();
+                    this.totalEth = ethers.utils.formatEther(v1VendingMachineTotalSalesInWei.add(v2VendingMachineTotalSalesInWei));
+                }
+            },
+            async blockcitiesContract(blockcitiesContract) {
+                if (blockcitiesContract) {
+                    this.totalBuildings = (await blockcitiesContract.totalBuildings()).toNumber();
+
+                    for (let i = this.totalBuildings - 6; i <= this.totalBuildings; i++) {
+                        const b = await axios.get(`${this.rootApi}/network/${this.chain.chainId}/token/${i}`);
+                        this.buildings.push(b);
+                    }
+                }
+            },
         },
         methods: {
             bg: (hex) => {

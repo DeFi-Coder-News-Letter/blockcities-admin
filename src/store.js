@@ -47,7 +47,7 @@ export default new Vuex.Store({
     },
     actions: {
         async provider ({ commit, state }, provider) {
-            console.log('provider', provider);
+            console.log('setting provider...');
             commit('provider', provider);
             commit('signer', provider.getSigner());
 

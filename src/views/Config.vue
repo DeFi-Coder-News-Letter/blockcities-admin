@@ -57,14 +57,12 @@
 <script>
     import { ethers, utils } from 'ethers';
     import { contracts } from 'blockcities-contract-artifacts';
+    import { mapGetters } from 'vuex';
 
     export default {
         name: 'config',
         data() {
             return {
-                blockcitiesContract: null,
-                vendingContract: null,
-
                 colourGeneratorContractAddress: null,
                 colourGeneratorContract: null,
                 colourGeneratorData: {
@@ -88,31 +86,20 @@
                     exteriorPercentageArrayInput: null,
                     backgroundsPercentagesArrayInput: null,
                 },
-
-                chainId: null,
             };
+        },
+        computed: {
+            ...mapGetters([
+                'rootApi',
+                'vendingContract',
+                'blockcitiesContract',
+                'provider',
+                'signer',
+                'chain',
+            ]),
         },
         created: async function () {
             try {
-                await window.ethereum.enable();
-                const provider = new ethers.providers.Web3Provider(web3.currentProvider);
-                const signer = provider.getSigner();
-                const {chainId} = await provider.getNetwork();
-
-                this.chainId = chainId;
-
-                this.vendingContract = new ethers.Contract(
-                    contracts.addresses.BlockCitiesVendingMachine(this.chainId).address,
-                    contracts.addresses.BlockCitiesVendingMachine(this.chainId).abi,
-                    signer
-                );
-
-                this.blockcitiesContract = new ethers.Contract(
-                    contracts.addresses.BlockCities(this.chainId).address,
-                    contracts.addresses.BlockCities(this.chainId).abi,
-                    signer
-                );
-
                 // get generators off the vending machine
                 this.colourGeneratorContractAddress = await this.vendingContract.colourGenerator();
                 this.logicGeneratorContractAddress = await this.vendingContract.logicGenerator();
@@ -125,9 +112,9 @@
                 // );
 
                 this.colourGeneratorContract = new ethers.Contract(
-                    contracts.addresses.ColourGenerator(this.chainId).address,
-                    contracts.addresses.ColourGenerator(this.chainId).abi,
-                    signer
+                    contracts.addresses.ColourGenerator(this.chain.chainId).address,
+                    contracts.addresses.ColourGenerator(this.chain.chainId).abi,
+                    this.signer
                 );
 
                 this.colourGeneratorData.platform = await this.colourGeneratorContract.platform();
@@ -137,8 +124,8 @@
 
                 this.logicGeneratorContract = new ethers.Contract(
                     this.logicGeneratorContractAddress,
-                    contracts.addresses.LogicGenerator(this.chainId).abi,
-                    signer
+                    contracts.addresses.LogicGenerator(this.chain.chainId).abi,
+                    this.signer
                 );
 
                 // uint256[] public cityPercentages;
@@ -204,6 +191,6 @@
                     alert('Something went bang!\n' +  e);
                 }
             }
-        }
+        },
     };
 </script>
