@@ -105,6 +105,19 @@
                 'v1VendingMachineTotalSalesInWei',
             ]),
         },
+        created: async function () {
+            if (this.provider) {
+                this.blocknumber = await this.provider.getBlockNumber();
+            }
+
+            if (this.vendingContract) {
+                this.getVendingContractDetails(this.vendingContract);
+            }
+
+            if (this.blockcitiesContract) {
+                this.loadBuildings(this.blockcitiesContract);
+            }
+        },
         watch: {
             async provider(provider) {
                 if (provider) {
@@ -113,29 +126,12 @@
             },
             async vendingContract(vendingContract) {
                 if (vendingContract) {
-                    this.pricePerBuildingInWei = await vendingContract.totalPrice(1);
-                    this.pricePerBuildingInEth = ethers.utils.formatEther(this.pricePerBuildingInWei);
-
-                    this.pricePerBuildingInEth = ethers.utils.formatEther(this.pricePerBuildingInWei);
-                    this.lastPricePerBuildingInEth = ethers.utils.formatEther((await vendingContract.lastSalePrice()));
-                    this.lastSaleBlock = await vendingContract.lastSaleBlock();
-
-                    const v1VendingMachineTotalSalesInWeiBn = utils.bigNumberify(this.v1VendingMachineTotalSalesInWei); // static val from contract
-                    const v2VendingMachineTotalSalesInWei = await vendingContract.totalPurchasesInWei();
-                    this.totalEth = ethers.utils.formatEther(v1VendingMachineTotalSalesInWeiBn.add(v2VendingMachineTotalSalesInWei));
+                    this.getVendingContractDetails(vendingContract);
                 }
             },
             async blockcitiesContract(blockcitiesContract) {
                 if (blockcitiesContract) {
-                    this.totalBuildings = (await blockcitiesContract.totalBuildings()).toNumber();
-
-                    if (this.totalBuildings > 0) {
-                        const last6 = (this.totalBuildings > 6) ? this.totalBuildings - 6 : 1;
-                        for (let i = last6; i <= this.totalBuildings; i++) {
-                            const b = await axios.get(`${this.rootApi}/network/${this.chain.chainId}/token/${i}`);
-                            this.buildings.push(b);
-                        }
-                    }
+                    this.loadBuildings(blockcitiesContract);
                 }
             },
         },
@@ -162,6 +158,29 @@
                 const tokenIdBN = receipt.events.pop().args[0];
                 this.buildingTokenId = tokenIdBN.toNumber();
                 console.log(`Token ID:`, this.buildingTokenId);
+            },
+            async getVendingContractDetails(vendingContract) {
+                this.pricePerBuildingInWei = await vendingContract.totalPrice(1);
+                this.pricePerBuildingInEth = ethers.utils.formatEther(this.pricePerBuildingInWei);
+
+                this.pricePerBuildingInEth = ethers.utils.formatEther(this.pricePerBuildingInWei);
+                this.lastPricePerBuildingInEth = ethers.utils.formatEther((await vendingContract.lastSalePrice()));
+                this.lastSaleBlock = await vendingContract.lastSaleBlock();
+
+                const v1VendingMachineTotalSalesInWeiBn = utils.bigNumberify(this.v1VendingMachineTotalSalesInWei); // static val from contract
+                const v2VendingMachineTotalSalesInWei = await vendingContract.totalPurchasesInWei();
+                this.totalEth = ethers.utils.formatEther(v1VendingMachineTotalSalesInWeiBn.add(v2VendingMachineTotalSalesInWei));
+            },
+            async loadBuildings(blockcitiesContract) {
+                this.totalBuildings = (await blockcitiesContract.totalBuildings()).toNumber();
+
+                if (this.totalBuildings > 0) {
+                    const last6 = (this.totalBuildings > 6) ? this.totalBuildings - 6 : 1;
+                    for (let i = last6; i <= this.totalBuildings; i++) {
+                        const b = await axios.get(`${this.rootApi}/network/${this.chain.chainId}/token/${i}`);
+                        this.buildings.push(b);
+                    }
+                }
             },
         }
     };
