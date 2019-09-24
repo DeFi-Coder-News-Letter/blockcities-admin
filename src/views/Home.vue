@@ -4,6 +4,10 @@
             <div class="row">
                 <div class="col">
                     <h1>{{ totalBuildings }} buildings</h1>
+                    <div>
+                        BlockCities contract: <code>{{ blockcitiesContract.address }}</code><br/>
+                        Vending Machine contract: <code>{{ vendingContract.address }}</code><br/>
+                    </div>
                     <small>
                         Price per building: {{ pricePerBuildingInEth }} ETH<br/>
                         Last price per building: {{ lastPricePerBuildingInEth }} ETH<br/>
