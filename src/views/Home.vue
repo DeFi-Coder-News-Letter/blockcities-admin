@@ -118,9 +118,11 @@
                 if (blockcitiesContract) {
                     this.totalBuildings = (await blockcitiesContract.totalBuildings()).toNumber();
 
-                    for (let i = this.totalBuildings - 6; i <= this.totalBuildings; i++) {
-                        const b = await axios.get(`${this.rootApi}/network/${this.chain.chainId}/token/${i}`);
-                        this.buildings.push(b);
+                    if (this.totalBuildings > 0) {
+                        for (let i = this.totalBuildings - 6; i <= this.totalBuildings; i++) {
+                            const b = await axios.get(`${this.rootApi}/network/${this.chain.chainId}/token/${i}`);
+                            this.buildings.push(b);
+                        }
                     }
                 }
             },
