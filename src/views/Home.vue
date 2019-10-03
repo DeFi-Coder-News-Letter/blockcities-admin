@@ -4,7 +4,7 @@
             <div class="row">
                 <div class="col">
                     <h1>{{ totalBuildings }} buildings</h1>
-                    <div>
+                    <div v-if="blockcitiesContract && vendingContract">
                         BlockCities contract: <code>{{ blockcitiesContract.address }}</code><br/>
                         Vending Machine contract: <code>{{ vendingContract.address }}</code><br/>
                     </div>
