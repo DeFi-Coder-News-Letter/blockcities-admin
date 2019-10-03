@@ -14,7 +14,7 @@
         </div>
 
         <div class="row mt-4" v-if="blockcitiesContract && vendingContract">
-            <div class="col">
+            <div class="col-12">
                 <h3>Colour Generator</h3>
                 Platform: <code>{{ colourGeneratorData.platform }}</code><br/>
                 Partner: <code>{{ colourGeneratorData.partner }}</code><br/>
@@ -42,14 +42,34 @@
                 </div>
                 <hr/>
             </div>
-            <!--<div class="col">-->
-                <!--<h3>Logic Generator</h3>-->
-                <!--City %: {{ logicGeneratorData.cityPercentages }}<br/>-->
-                <!--City Mappings: {{ logicGeneratorData.cityMappings }}<br/>-->
-                <!--Base Mappings: {{ logicGeneratorData.buildingBaseMappings }}<br/>-->
-                <!--Body Mappings: {{ logicGeneratorData.buildingBodyMappings }}<br/>-->
-                <!--Roof Mappings: {{ logicGeneratorData.buildingRoofMappings }}<br/>-->
-            <!--</div>-->
+            <div class="col-12">
+                <h3>Logic Generator</h3>
+                Platform: <code>{{ colourGeneratorData.platform }}</code><br/>
+                Partner: <code>{{ colourGeneratorData.partner }}</code><br/>
+                <hr/>
+                <div class="mb-2 text-right">City %: <code>{{ logicGeneratorData.cityPercentagesArray }}</code></div>
+                <div>
+                    <b-form>
+                        <b-input-group prepend="City %" class="mb-2">
+                            <b-input type="text" placeholder="comma separated list, for example:1,2,3" v-model="form.cityPercentagesArrayInput"></b-input>
+                        </b-input-group>
+
+                        <b-button variant="primary" v-on:click="updateCityPercentagesArray">Update City %</b-button>
+                    </b-form>
+                </div>
+                <hr/>
+                <div class="mb-2 text-right">Special Mappings:  <code>{{ logicGeneratorData.specialMappingsArray }}</code></div>
+                <div>
+                    <b-form>
+                        <b-input-group prepend="Specials %" class="mb-2">
+                            <b-input type="text" placeholder="comma separated list, for example:1,2,3" v-model="form.specialMappingsArrayInput"></b-input>
+                        </b-input-group>
+
+                        <b-button variant="primary" v-on:click="updateSpecialMappingsArray">Update Specials %</b-button>
+                    </b-form>
+                </div>
+                <hr/>
+            </div>
         </div>
     </div>
 </template>
@@ -77,16 +97,22 @@
                 logicGeneratorContractAddress: null,
                 logicGeneratorContract: null,
                 logicGeneratorData: {
-                    cityPercentages: null,
-                    cityMappings: null,
+                    platform: null,
+                    partner: null,
+                    cityPercentagesArray: null,
+                    specialMappingsArray: null,
+                    cityMappingsArray: null,
                     buildingBaseMappings: null,
                     buildingBodyMappings: null,
                     buildingRoofMappings: null,
                 },
 
                 form: {
+                    city: null,
                     exteriorPercentageArrayInput: null,
                     backgroundsPercentagesArrayInput: null,
+                    cityPercentagesArrayInput: null,
+                    specialMappingsArrayInput: null,
                 },
 
                 chainId: null,
@@ -128,27 +154,17 @@
                 this.colourGeneratorData.exteriorPercentageArray = (await this.colourGeneratorContract.exteriorPercentageArray()).map((bn) => bn.toNumber());
                 this.colourGeneratorData.backgroundsPercentagesArray = (await this.colourGeneratorContract.backgroundsPercentagesArray()).map((bn) => bn.toNumber());
 
-                // this.logicGeneratorContract = new ethers.Contract(
-                //     this.logicGeneratorContractAddress,
-                //     contracts.addresses.LogicGenerator(this.chainId).abi,
-                //     signer
-                // );
+                this.logicGeneratorContract = new ethers.Contract(
+                    this.logicGeneratorContractAddress,
+                    contracts.addresses.LogicGenerator(this.chainId).abi,
+                    signer
+                );
 
-                // uint256[] public cityPercentages;
-                //
-                // mapping(uint256 => uint256[]) public cityMappings;
-                //
-                // mapping(uint256 => uint256[]) public buildingBaseMappings;
-                // mapping(uint256 => uint256[]) public buildingBodyMappings;
-                // mapping(uint256 => uint256[]) public buildingRoofMappings;
-                //
-                // uint256[] public specialMappings;
+                this.logicGeneratorData.platform = await this.logicGeneratorContract.platform();
+                this.logicGeneratorData.partner = await this.logicGeneratorContract.partner();
+                this.logicGeneratorData.cityPercentagesArray = (await this.logicGeneratorContract.cityPercentagesArray()).map((bn) => bn.toNumber());
+                this.logicGeneratorData.specialMappingsArray = (await this.logicGeneratorContract.specialMappingsArray()).map((bn) => bn.toNumber());
 
-                // this.logicGeneratorData.cityPercentages = await this.logicGeneratorContract.cityPercentages(0);
-                // this.logicGeneratorData.cityMappings = await this.logicGeneratorContract.cityMappings(0, 0);
-                // this.logicGeneratorData.buildingBaseMappings = await this.logicGeneratorContract.buildingBaseMappings(0, 0);
-                // this.logicGeneratorData.buildingBodyMappings = await this.logicGeneratorContract.buildingBodyMappings(0, 0);
-                // this.logicGeneratorData.buildingRoofMappings = await this.logicGeneratorContract.buildingRoofMappings(0, 0);
 
             } catch (e) {
                 console.error(e);
@@ -196,7 +212,49 @@
                     console.error(e);
                     alert('Something went bang!\n' +  e);
                 }
-            }
+            },
+            async updateCityPercentagesArray() {
+                try {
+                    if (this.form.cityPercentagesArrayInput) {
+
+                        const convertedCityPercentagesArray = this.form.cityPercentagesArrayInput.split(',').map((str) => str.trim());
+                        const tx = await this.logicGeneratorContract.updateCityPercentages(convertedCityPercentagesArray);
+                        console.log('TX', tx);
+
+                        const receipt = await tx.wait(1);
+                        console.log('RECEIPT', receipt);
+
+                        this.logicGeneratorData.cityPercentagesArray = (await this.logicGeneratorContract.cityPercentagesArray()).map((bn) => bn.toNumber());
+                        this.form.cityPercentagesArrayInput = null;
+                    } else {
+                        alert('Fill in City Percentage Array Input!');
+                    }
+                } catch (e) {
+                    console.error(e);
+                    alert('Something went bang!\n' +  e);
+                }
+            },
+            async updateSpecialMappingsArray() {
+                try {
+                    if (this.form.specialMappingsArrayInput) {
+
+                        const convertedSpecialMappingsArray = this.form.specialMappingsArrayInput.split(',').map((str) => str.trim());
+                        const tx = await this.logicGeneratorContract.updateSpecialMappings(convertedSpecialMappingsArray);
+                        console.log('TX', tx);
+
+                        const receipt = await tx.wait(1);
+                        console.log('RECEIPT', receipt);
+
+                        this.logicGeneratorData.specialMappingsArray = (await this.logicGeneratorContract.specialMappingsArray()).map((bn) => bn.toNumber());
+                        this.form.specialMappingsArrayInput = null;
+                    } else {
+                        alert('Fill in Specials Percentage Array Input!');
+                    }
+                } catch (e) {
+                    console.error(e);
+                    alert('Something went bang!\n' +  e);
+                }
+            },
         }
     };
 </script>
