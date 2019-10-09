@@ -26,7 +26,7 @@
                             <b-input type="text" placeholder="comma separated list, for example:1,2,3" v-model="form.exteriorPercentageArrayInput"></b-input>
                         </b-input-group>
 
-                        <b-button variant="primary" v-on:click="updateExteriorPercentageArray">Update Exterior %</b-button>
+                        <b-button variant="primary" v-on:click="updateColourArray('exteriorPercentageArrayInput', 'exteriorPercentageArray', 'updateExteriorPercentages', 'exteriorPercentageArray')">Update Exterior %</b-button>
                     </b-form>
                 </div>
                 <hr/>
@@ -37,7 +37,7 @@
                             <b-input type="text" placeholder="comma separated list, for example:1,2,3" v-model="form.backgroundsPercentagesArrayInput"></b-input>
                         </b-input-group>
 
-                        <b-button variant="primary" v-on:click="updateBackgroundsPercentagesArray">Update Backgrounds %</b-button>
+                        <b-button variant="primary" v-on:click="updateColourArray('backgroundsPercentagesArrayInput', 'backgroundsPercentagesArray', 'updateBackgroundsPercentages', 'backgroundsPercentagesArray')">Update Backgrounds %</b-button>
                     </b-form>
                 </div>
                 <hr/>
@@ -192,42 +192,24 @@
             splitNTrim(inputArray) {
                 return (inputArray || []).split(',').map((str) => str.trim());
             },
-            async updateExteriorPercentageArray() {
+            async updateColourArray(inputArray, dataArray, updateFunc, readFunc) {
+                console.log(`${inputArray} ${dataArray} ${updateFunc} ${readFunc}`);
                 try {
-                    if (this.form.exteriorPercentageArrayInput) {
+                    if (this.form[inputArray]) {
 
-                        const convertedExteriorPercentageArray = this.splitNTrim(this.form.exteriorPercentageArrayInput);
-                        const tx = await this.colourGeneratorContract.updateExteriorPercentages(convertedExteriorPercentageArray);
+                        const convertedArray = this.splitNTrim(this.form[inputArray]);
+                        const tx = await this.colourGeneratorContract[updateFunc](convertedArray);
                         console.log('TX', tx);
 
                         const receipt = await tx.wait(1);
                         console.log('RECEIPT', receipt);
 
-                        this.colourGeneratorData.exteriorPercentageArray = this.mapToNumber(await this.colourGeneratorContract.exteriorPercentageArray());
-                        this.form.exteriorPercentageArrayInput = null;
+                        this.colourGeneratorData[dataArray] = this.mapToNumber(await this.colourGeneratorContract[readFunc]());
+                        this.form[inputArray] = null;
+
+                        console.log('New data:', this.colourGeneratorData[dataArray]);
                     } else {
-                        alert('Fill in Exterior Percentage Array Input!');
-                    }
-                } catch (e) {
-                    console.error(e);
-                    alert('Something went bang!\n' +  e);
-                }
-            },
-            async updateBackgroundsPercentagesArray() {
-                try {
-                    if (this.form.backgroundsPercentagesArrayInput) {
-
-                        const convertedBackgroundsPercentageArray =  this.splitNTrim(this.form.backgroundsPercentagesArrayInput);
-                        const tx = await this.colourGeneratorContract.updateBackgroundsPercentages(convertedBackgroundsPercentageArray);
-                        console.log('TX', tx);
-
-                        const receipt = await tx.wait(1);
-                        console.log('RECEIPT', receipt);
-
-                        this.colourGeneratorData.backgroundsPercentagesArray = this.mapToNumber(await this.colourGeneratorContract.backgroundsPercentagesArray());
-                        this.form.backgroundsPercentagesArrayInput = null;
-                    } else {
-                        alert('Fill in Exterior Percentage Array Input!');
+                        alert(`Fill in ${inputArray} Input!`);
                     }
                 } catch (e) {
                     console.error(e);
