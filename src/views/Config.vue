@@ -69,6 +69,18 @@
                     </b-form>
                 </div>
                 <hr/>
+                <div class="mb-2 text-right">City: <b-form-input type="number" v-model="form.cityId" placeholder="City ID" v-on:change="lookupCityMappings"></b-form-input></div>
+                <div class="mb-2 text-right">City ID: <code>{{ form.cityId }}</code> City Mappings:  <code>{{ logicGeneratorData.cityMappingsArray }}</code></div>
+                <div>
+                    <b-form>
+                        <b-input-group prepend="City Mappings %" class="mb-2">
+                            <b-input type="text" placeholder="comma separated list, for example:1,2,3" v-model="form.cityMappingsArrayInput"></b-input>
+                        </b-input-group>
+
+                        <b-button variant="primary" v-on:click="updateCityMappingsArray">Update City Mappings %</b-button>
+                    </b-form>
+                </div>
+                <hr/>
             </div>
         </div>
     </div>
@@ -113,6 +125,9 @@
                     backgroundsPercentagesArrayInput: null,
                     cityPercentagesArrayInput: null,
                     specialMappingsArrayInput: null,
+
+                    cityId: null,
+                    cityMappingsArrayInput: null,
                 },
 
                 chainId: null,
@@ -151,8 +166,8 @@
 
                 this.colourGeneratorData.platform = await this.colourGeneratorContract.platform();
                 this.colourGeneratorData.partner = await this.colourGeneratorContract.partner();
-                this.colourGeneratorData.exteriorPercentageArray = (await this.colourGeneratorContract.exteriorPercentageArray()).map((bn) => bn.toNumber());
-                this.colourGeneratorData.backgroundsPercentagesArray = (await this.colourGeneratorContract.backgroundsPercentagesArray()).map((bn) => bn.toNumber());
+                this.colourGeneratorData.exteriorPercentageArray = this.mapToNumber(await this.colourGeneratorContract.exteriorPercentageArray());
+                this.colourGeneratorData.backgroundsPercentagesArray = this.mapToNumber(await this.colourGeneratorContract.backgroundsPercentagesArray());
 
                 this.logicGeneratorContract = new ethers.Contract(
                     this.logicGeneratorContractAddress,
@@ -162,8 +177,8 @@
 
                 this.logicGeneratorData.platform = await this.logicGeneratorContract.platform();
                 this.logicGeneratorData.partner = await this.logicGeneratorContract.partner();
-                this.logicGeneratorData.cityPercentagesArray = (await this.logicGeneratorContract.cityPercentagesArray()).map((bn) => bn.toNumber());
-                this.logicGeneratorData.specialMappingsArray = (await this.logicGeneratorContract.specialMappingsArray()).map((bn) => bn.toNumber());
+                this.logicGeneratorData.cityPercentagesArray = this.mapToNumber(await this.logicGeneratorContract.cityPercentagesArray());
+                this.logicGeneratorData.specialMappingsArray = this.mapToNumber(await this.logicGeneratorContract.specialMappingsArray());
 
 
             } catch (e) {
@@ -171,18 +186,24 @@
             }
         },
         methods: {
+            mapToNumber(inputArray) {
+                return (inputArray || []).map((bn) => bn.toNumber());
+            },
+            splitNTrim(inputArray) {
+                return (inputArray || []).split(',').map((str) => str.trim());
+            },
             async updateExteriorPercentageArray() {
                 try {
                     if (this.form.exteriorPercentageArrayInput) {
 
-                        const convertedExteriorPercentageArray = this.form.exteriorPercentageArrayInput.split(',').map((str) => str.trim());
+                        const convertedExteriorPercentageArray = this.splitNTrim(this.form.exteriorPercentageArrayInput);
                         const tx = await this.colourGeneratorContract.updateExteriorPercentages(convertedExteriorPercentageArray);
                         console.log('TX', tx);
 
                         const receipt = await tx.wait(1);
                         console.log('RECEIPT', receipt);
 
-                        this.colourGeneratorData.exteriorPercentageArray = (await this.colourGeneratorContract.exteriorPercentageArray()).map((bn) => bn.toNumber());
+                        this.colourGeneratorData.exteriorPercentageArray = this.mapToNumber(await this.colourGeneratorContract.exteriorPercentageArray());
                         this.form.exteriorPercentageArrayInput = null;
                     } else {
                         alert('Fill in Exterior Percentage Array Input!');
@@ -196,14 +217,14 @@
                 try {
                     if (this.form.backgroundsPercentagesArrayInput) {
 
-                        const convertedBackgroundsPercentageArray = this.form.backgroundsPercentagesArrayInput.split(',').map((str) => str.trim());
+                        const convertedBackgroundsPercentageArray =  this.splitNTrim(this.form.backgroundsPercentagesArrayInput);
                         const tx = await this.colourGeneratorContract.updateBackgroundsPercentages(convertedBackgroundsPercentageArray);
                         console.log('TX', tx);
 
                         const receipt = await tx.wait(1);
                         console.log('RECEIPT', receipt);
 
-                        this.colourGeneratorData.backgroundsPercentagesArray = (await this.colourGeneratorContract.backgroundsPercentagesArray()).map((bn) => bn.toNumber());
+                        this.colourGeneratorData.backgroundsPercentagesArray = this.mapToNumber(await this.colourGeneratorContract.backgroundsPercentagesArray());
                         this.form.backgroundsPercentagesArrayInput = null;
                     } else {
                         alert('Fill in Exterior Percentage Array Input!');
@@ -217,14 +238,14 @@
                 try {
                     if (this.form.cityPercentagesArrayInput) {
 
-                        const convertedCityPercentagesArray = this.form.cityPercentagesArrayInput.split(',').map((str) => str.trim());
+                        const convertedCityPercentagesArray =  this.splitNTrim(this.form.cityPercentagesArrayInput);
                         const tx = await this.logicGeneratorContract.updateCityPercentages(convertedCityPercentagesArray);
                         console.log('TX', tx);
 
                         const receipt = await tx.wait(1);
                         console.log('RECEIPT', receipt);
 
-                        this.logicGeneratorData.cityPercentagesArray = (await this.logicGeneratorContract.cityPercentagesArray()).map((bn) => bn.toNumber());
+                        this.logicGeneratorData.cityPercentagesArray = this.mapToNumber(await this.logicGeneratorContract.cityPercentagesArray());
                         this.form.cityPercentagesArrayInput = null;
                     } else {
                         alert('Fill in City Percentage Array Input!');
@@ -238,17 +259,50 @@
                 try {
                     if (this.form.specialMappingsArrayInput) {
 
-                        const convertedSpecialMappingsArray = this.form.specialMappingsArrayInput.split(',').map((str) => str.trim());
+                        const convertedSpecialMappingsArray =  this.splitNTrim(this.form.specialMappingsArrayInput);
                         const tx = await this.logicGeneratorContract.updateSpecialMappings(convertedSpecialMappingsArray);
                         console.log('TX', tx);
 
                         const receipt = await tx.wait(1);
                         console.log('RECEIPT', receipt);
 
-                        this.logicGeneratorData.specialMappingsArray = (await this.logicGeneratorContract.specialMappingsArray()).map((bn) => bn.toNumber());
+                        this.logicGeneratorData.specialMappingsArray = this.mapToNumber(await this.logicGeneratorContract.specialMappingsArray());
                         this.form.specialMappingsArrayInput = null;
                     } else {
                         alert('Fill in Specials Percentage Array Input!');
+                    }
+                } catch (e) {
+                    console.error(e);
+                    alert('Something went bang!\n' +  e);
+                }
+            },
+            async lookupCityMappings() {
+                try {
+                    if (this.form.cityId) {
+                        console.log('Looking up city ID', this.form.cityId);
+
+                        this.logicGeneratorData.cityMappingsArray = this.mapToNumber(await this.logicGeneratorContract.cityMappingsArray(this.form.cityId));
+                    }
+                } catch (e) {
+                    console.error(e);
+                    alert('Something went bang!\n' +  e);
+                }
+            },
+            async updateCityMappingsArray() {
+                try {
+                    if (this.form.cityId && this.form.cityMappingsArrayInput) {
+
+                        const convertedCityMappingsArray =  this.splitNTrim(this.form.cityMappingsArrayInput);
+                        const tx = await this.logicGeneratorContract.updateCityMappings(this.form.cityId, convertedCityMappingsArray);
+                        console.log('TX', tx);
+
+                        const receipt = await tx.wait(1);
+                        console.log('RECEIPT', receipt);
+
+                        this.logicGeneratorData.cityMappingsArray = this.mapToNumber(await this.logicGeneratorContract.cityMappingsArray(this.form.cityId));
+                        this.form.cityMappingsArrayInput = null;
+                    } else {
+                        alert('Fill in City Mappings Array Input!');
                     }
                 } catch (e) {
                     console.error(e);
