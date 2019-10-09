@@ -17,10 +17,8 @@ export default new Vuex.Store({
     },
     getters: {
         rootApi: (state) => {
-            if (state.chainId === 5777) {
-                return 'http://localhost:5000/block-cities/us-central1/api';
-            }
-            return 'https://us-central1-block-cities.cloudfunctions.net/api';
+            return 'http://localhost:5000/block-cities/us-central1/api';
+            // return 'https://us-central1-block-cities.cloudfunctions.net/api';
         },
         provider: state => state.provider,
         signer: state => state.signer,

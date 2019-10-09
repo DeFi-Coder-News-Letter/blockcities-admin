@@ -22,6 +22,11 @@ export default new Router({
             path: '/config',
             name: 'config',
             component: () => import(/* webpackChunkName: "config" */ './views/Config.vue')
-        }
+        },
+        {
+            path: '/tester',
+            name: 'tester',
+            component: () => import(/* webpackChunkName: "config" */ './views/Tester.vue')
+        },
     ]
 });
