@@ -70,7 +70,7 @@
                 </div>
                 <hr/>
                 <div class="mb-2 text-right">City: <b-form-input type="number" v-model="form.cityId" placeholder="City ID" v-on:change="lookupCityMappings"></b-form-input></div>
-                <div class="mb-2 text-right">City ID: <code>{{ form.cityId }}</code> City Mappings:  <code>{{ logicGeneratorData.cityMappingsArray }}</code></div>
+                <div class="mb-2 text-right">City ID: <code>{{ form.cityId }}</code> City -> Building Mappings:  <code>{{ logicGeneratorData.cityMappingsArray }}</code></div>
                 <div>
                     <b-form>
                         <b-input-group prepend="City Mappings %" class="mb-2">
@@ -78,6 +78,38 @@
                         </b-input-group>
 
                         <b-button variant="primary" v-on:click="updateCityMappingsArray">Update City Mappings %</b-button>
+                    </b-form>
+                </div>
+                <hr/>
+                <div class="mb-2 text-right">Building: <b-form-input type="number" v-model="form.buildingId" placeholder="Building ID" v-on:change="lookupBuildingMappings"></b-form-input></div>
+                <div class="mb-2 text-right">Building ID: <code>{{ form.buildingId }}</code> Base Mappings:  <code>{{ logicGeneratorData.buildingBaseMappings }}</code></div>
+                <div>
+                    <b-form>
+                        <b-input-group prepend="Base Mappings %" class="mb-2">
+                            <b-input type="text" placeholder="comma separated list, for example:1,2,3" v-model="form.buildingBaseMappingsArrayInput"></b-input>
+                        </b-input-group>
+
+                        <b-button variant="primary" v-on:click="updateBuildingBaseMappingsArray">Update Base Mappings %</b-button>
+                    </b-form>
+                </div>
+                <div class="mb-2 text-right">Building ID: <code>{{ form.buildingId }}</code> Body Mappings:  <code>{{ logicGeneratorData.buildingBodyMappings }}</code></div>
+                <div>
+                    <b-form>
+                        <b-input-group prepend="Body Mappings %" class="mb-2">
+                            <b-input type="text" placeholder="comma separated list, for example:1,2,3" v-model="form.buildingBodyMappingsArrayInput"></b-input>
+                        </b-input-group>
+
+                        <b-button variant="primary" v-on:click="updateBuildingBodyMappingsArray">Update Body Mappings %</b-button>
+                    </b-form>
+                </div>
+                <div class="mb-2 text-right">Building ID: <code>{{ form.buildingId }}</code> Roof Mappings:  <code>{{ logicGeneratorData.buildingRoofMappings }}</code></div>
+                <div>
+                    <b-form>
+                        <b-input-group prepend="Roof Mappings %" class="mb-2">
+                            <b-input type="text" placeholder="comma separated list, for example:1,2,3" v-model="form.buildingRoofMappingsArrayInput"></b-input>
+                        </b-input-group>
+
+                        <b-button variant="primary" v-on:click="updateBuildingRoofMappingsArray">Update Roof Mappings %</b-button>
                     </b-form>
                 </div>
                 <hr/>
@@ -128,6 +160,11 @@
 
                     cityId: null,
                     cityMappingsArrayInput: null,
+
+                    buildingId: null,
+                    buildingBaseMappingsArrayInput: null,
+                    buildingBodyMappingsArrayInput: null,
+                    buildingRoofMappingsArrayInput: null,
                 },
 
                 chainId: null,
@@ -285,6 +322,83 @@
                         this.form.cityMappingsArrayInput = null;
                     } else {
                         alert('Fill in City Mappings Array Input!');
+                    }
+                } catch (e) {
+                    console.error(e);
+                    alert('Something went bang!\n' +  e);
+                }
+            },
+            async lookupBuildingMappings() {
+                try {
+                    if (this.form.buildingId) {
+                        console.log('Looking up building ID', this.form.buildingId);
+
+                        this.logicGeneratorData.buildingBaseMappings = this.mapToNumber(await this.logicGeneratorContract.buildingBaseMappingsArray(this.form.buildingId));
+                        this.logicGeneratorData.buildingBodyMappings = this.mapToNumber(await this.logicGeneratorContract.buildingBodyMappingsArray(this.form.buildingId));
+                        this.logicGeneratorData.buildingRoofMappings = this.mapToNumber(await this.logicGeneratorContract.buildingRoofMappingsArray(this.form.buildingId));
+                    }
+                } catch (e) {
+                    console.error(e);
+                    alert('Something went bang!\n' +  e);
+                }
+            },
+            async updateBuildingBaseMappingsArray() {
+                try {
+                    if (this.form.buildingId && this.form.buildingBaseMappingsArrayInput) {
+
+                        const convertedBaseMappingsArray =  this.splitNTrim(this.form.buildingBaseMappingsArrayInput);
+                        const tx = await this.logicGeneratorContract.updateBuildingBaseMappings(this.form.buildingId, convertedBaseMappingsArray);
+                        console.log('TX', tx);
+
+                        const receipt = await tx.wait(1);
+                        console.log('RECEIPT', receipt);
+
+                        this.logicGeneratorData.buildingBaseMappings = this.mapToNumber(await this.logicGeneratorContract.buildingBaseMappingsArray(this.form.buildingId));
+                        this.form.buildingBaseMappingsArrayInput = null;
+                    } else {
+                        alert('Fill in Base Mappings Array Input!');
+                    }
+                } catch (e) {
+                    console.error(e);
+                    alert('Something went bang!\n' +  e);
+                }
+            },
+            async updateBuildingBodyMappingsArray() {
+                try {
+                    if (this.form.buildingId && this.form.buildingBodyMappingsArrayInput) {
+
+                        const convertedBodyMappingsArray =  this.splitNTrim(this.form.buildingBodyMappingsArrayInput);
+                        const tx = await this.logicGeneratorContract.updateBuildingBodyMappings(this.form.buildingId, convertedBodyMappingsArray);
+                        console.log('TX', tx);
+
+                        const receipt = await tx.wait(1);
+                        console.log('RECEIPT', receipt);
+
+                        this.logicGeneratorData.buildingBodyMappings = this.mapToNumber(await this.logicGeneratorContract.buildingBodyMappingsArray(this.form.buildingId));
+                        this.form.buildingBodyMappingsArrayInput = null;
+                    } else {
+                        alert('Fill in Body Mappings Array Input!');
+                    }
+                } catch (e) {
+                    console.error(e);
+                    alert('Something went bang!\n' +  e);
+                }
+            },
+            async updateBuildingRoofMappingsArray() {
+                try {
+                    if (this.form.buildingId && this.form.buildingRoofMappingsArrayInput) {
+
+                        const convertedRoofMappingsArray =  this.splitNTrim(this.form.buildingRoofMappingsArrayInput);
+                        const tx = await this.logicGeneratorContract.updateBuildingRoofMappings(this.form.buildingId, convertedRoofMappingsArray);
+                        console.log('TX', tx);
+
+                        const receipt = await tx.wait(1);
+                        console.log('RECEIPT', receipt);
+
+                        this.logicGeneratorData.buildingRoofMappings = this.mapToNumber(await this.logicGeneratorContract.buildingRoofMappingsArray(this.form.buildingId));
+                        this.form.buildingRoofMappingsArrayInput = null;
+                    } else {
+                        alert('Fill in Base Mappings Array Input!');
                     }
                 } catch (e) {
                     console.error(e);
