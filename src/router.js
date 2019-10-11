@@ -28,5 +28,10 @@ export default new Router({
             name: 'tester',
             component: () => import(/* webpackChunkName: "config" */ './views/Tester.vue')
         },
+        {
+            path: '/checker',
+            name: 'checker',
+            component: () => import(/* webpackChunkName: "config" */ './views/Checker.vue')
+        },
     ]
 });
