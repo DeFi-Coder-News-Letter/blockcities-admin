@@ -47,6 +47,17 @@
                 Platform: <code>{{ colourGeneratorData.platform }}</code><br/>
                 Partner: <code>{{ colourGeneratorData.partner }}</code><br/>
                 <hr/>
+                <div class="mb-2 text-right">Special Modulo: <code>{{ logicGeneratorData.specialModulo }}</code></div>
+                <div>
+                    <b-form>
+                        <b-input-group prepend="Special Modulo" class="mb-2">
+                            <b-input type="text" placeholder="for example, 10" v-model="form.specialModuloInput"></b-input>
+                        </b-input-group>
+
+                        <b-button variant="primary" v-on:click="updateSpecialModulo">Update Special Modulo</b-button>
+                    </b-form>
+                </div>
+                <hr/>
                 <div class="mb-2 text-right">City %: <code>{{ logicGeneratorData.cityPercentagesArray }}</code></div>
                 <div>
                     <b-form>
@@ -58,7 +69,7 @@
                     </b-form>
                 </div>
                 <hr/>
-                <div class="mb-2 text-right">Special Mappings:  <code>{{ logicGeneratorData.specialMappingsArray }}</code></div>
+                <div class="mb-2 text-right">Special Mappings: <code>{{ logicGeneratorData.specialMappingsArray }}</code></div>
                 <div>
                     <b-form>
                         <b-input-group prepend="Specials %" class="mb-2">
@@ -143,6 +154,7 @@
                 logicGeneratorData: {
                     platform: null,
                     partner: null,
+                    specialModulo: null,
                     cityPercentagesArray: null,
                     specialMappingsArray: null,
                     cityMappingsArray: null,
@@ -157,6 +169,7 @@
                     backgroundsPercentagesArrayInput: null,
                     cityPercentagesArrayInput: null,
                     specialMappingsArrayInput: null,
+                    specialModuloInput: null,
 
                     cityId: null,
                     cityMappingsArrayInput: null,
@@ -214,6 +227,7 @@
 
                 this.logicGeneratorData.platform = await this.logicGeneratorContract.platform();
                 this.logicGeneratorData.partner = await this.logicGeneratorContract.partner();
+                this.logicGeneratorData.specialModulo = await this.logicGeneratorContract.specialModulo();
                 this.logicGeneratorData.cityPercentagesArray = this.mapToNumber(await this.logicGeneratorContract.cityPercentagesArray());
                 this.logicGeneratorData.specialMappingsArray = this.mapToNumber(await this.logicGeneratorContract.specialMappingsArray());
 
@@ -228,6 +242,28 @@
             },
             splitNTrim(inputArray) {
                 return (inputArray || []).split(',').map((str) => str.trim());
+            },
+            async updateSpecialModulo() {
+                console.log(`Updating modulo ${this.form.specialModuloInput}`);
+                try {
+                    if (this.form.specialModuloInput) {
+
+                        const tx = await this.logicGeneratorContract.updateSpecialModulo(this.form.specialModuloInput);
+                        console.log('TX', tx);
+
+                        const receipt = await tx.wait(1);
+                        console.log('RECEIPT', receipt);
+
+                        this.logicGeneratorData.specialModulo = await this.logicGeneratorContract.specialModulo();
+
+                        console.log('New data:', this.logicGeneratorData.specialModulo);
+                    } else {
+                        alert(`Fill in Special Modulo!`);
+                    }
+                } catch (e) {
+                    console.error(e);
+                    alert('Something went bang!\n' +  e);
+                }
             },
             async updateColourArray(inputArray, dataArray, updateFunc, readFunc) {
                 console.log(`${inputArray} ${dataArray} ${updateFunc} ${readFunc}`);
