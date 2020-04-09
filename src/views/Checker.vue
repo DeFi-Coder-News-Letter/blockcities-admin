@@ -19,21 +19,29 @@
             </div>
         </div>
         <div class="row text-center">
-            <div class="col-12 col-sm-6">
+            <div class="col-12 col-sm-6 mb-4">
                 <h2>SVG</h2>
-                <img :src="`${rootApi}/network/1/token/${tokenId}/image`" class="img-fluid" :class="{'restrict': restrict}"/>
+                <img :src="`${rootApi}/network/${chain.chainId}/token/${tokenId}/image`" class="img-fluid" :class="{'restrict': restrict}"/>
             </div>
-            <div class="col-12 col-sm-6">
+            <div class="col-12 col-sm-6 mb-4">
                 <h2>PNG</h2>
-                <img :src="`${rootApi}/network/1/token/image/${tokenId}.png`" class="img-fluid" :class="{'restrict': restrict}"/>
+                <img :src="`${rootApi}/network/${chain.chainId}/token/image/${tokenId}.png`" class="img-fluid" :class="{'restrict': restrict}"/>
             </div>
-            <div class="col-12 col-sm-6">
+            <div class="col-12 col-sm-6 mb-4">
                 <h2>SVG with BG</h2>
-                <img :src="`${rootApi}/network/1/token/${tokenId}/image-bg`" class="img-fluid" :class="{'restrict': restrict}"/>
+                <img :src="`${rootApi}/network/${chain.chainId}/token/${tokenId}/image-bg`" class="img-fluid" :class="{'restrict': restrict}"/>
             </div>
-            <div class="col-12 col-sm-6">
+            <div class="col-12 col-sm-6 mb-4">
                 <h2>PNG with BG</h2>
-                <img :src="`${rootApi}/network/1/token/image-bg/${tokenId}.png`" class="img-fluid" :class="{'restrict': restrict}"/>
+                <img :src="`${rootApi}/network/${chain.chainId}/token/image-bg/${tokenId}.png`" class="img-fluid" :class="{'restrict': restrict}"/>
+            </div>
+            <div class="col-12 col-sm-6 mb-4">
+                <h2>SVG without concrete</h2>
+                <img :src="`${rootApi}/network/${chain.chainId}/token/${tokenId}/image-zero-concrete`" class="img-fluid" :class="{'restrict': restrict}"/>
+            </div>
+            <div class="col-12 col-sm-6 mb-4">
+                <h2>PNG without concrete</h2>
+                <img :src="`${rootApi}/network/${chain.chainId}/token/image-zero-concrete/${tokenId}.png`" class="img-fluid" :class="{'restrict': restrict}"/>
             </div>
         </div>
     </div>
@@ -51,11 +59,12 @@
         computed: {
             ...mapGetters([
                 'rootApi',
+                'chain',
             ]),
         },
         data() {
             return {
-                tokenId: 99,
+                tokenId: 23,
                 restrict: false,
             };
         },

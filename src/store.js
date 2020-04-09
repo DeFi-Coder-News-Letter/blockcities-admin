@@ -13,6 +13,7 @@ export default new Vuex.Store({
         chain: null,
 
         vendingContract: null,
+        limitedVendingContract: null,
         blockcitiesContract: null,
     },
     getters: {
@@ -26,6 +27,7 @@ export default new Vuex.Store({
         v1VendingMachineTotalSalesInWei: state => (state.chain && state.chain.chainId === 1) ? '25510500000000000000' : '',
         vendingContract: state => state.vendingContract,
         blockcitiesContract: state => state.blockcitiesContract,
+        limitedVendingContract: state => state.limitedVendingContract,
     },
     mutations: {
         provider (state, provider) {
@@ -42,6 +44,9 @@ export default new Vuex.Store({
         },
         blockcitiesContract (state, blockcitiesContract) {
             state.blockcitiesContract = blockcitiesContract;
+        },
+        limitedVendingContract (state, limitedVendingContract) {
+            state.limitedVendingContract = limitedVendingContract;
         },
     },
     actions: {
@@ -66,6 +71,13 @@ export default new Vuex.Store({
                 state.signer
             );
             commit('blockcitiesContract', blockcitiesContract);
+
+            const limitedVendingContract = new ethers.Contract(
+                contracts.addresses.LimitedVendingMachine(state.chain.chainId).address,
+                contracts.addresses.LimitedVendingMachine(state.chain.chainId).abi,
+                state.signer
+            );
+            commit('limitedVendingContract', limitedVendingContract);
         }
     }
 });
